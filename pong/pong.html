@@ -1,0 +1,144 @@
+<html>
+<head>
+    <style>
+        body {
+            overflow: hidden;
+            margin: 0;
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #paddle, #paddle2 {
+            width: 40px;
+            height: 150px;
+            position: absolute;
+            top: calc(50% - 75px);
+            background-color: #ffefef;
+        }
+
+        #paddle {
+            left: 50px;
+        }
+
+        #paddle2 {
+            right: 50px;
+        }
+
+        #ball {
+            position: absolute;
+            top: calc(50%);
+            left: calc(50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #AA0000;
+        }
+
+        #scoreLeft, #scoreRight {
+            position: fixed;
+            top: 20px;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        #scoreLeft {
+            left: 50px;
+        }
+
+        #scoreRight {
+            right: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="paddle"></div>
+    <div id="ball"></div>
+    <div id="paddle2"></div>
+
+    <div id="scoreLeft">0</div>
+    <div id="scoreRight">0</div>
+
+    <script>
+        const paddle = document.getElementById("paddle");
+        const paddle2 = document.getElementById("paddle2");
+        const ball = document.getElementById("ball");
+        const scoreLeftDiv = document.getElementById("scoreLeft");
+        const scoreRightDiv = document.getElementById("scoreRight");
+
+        let scoreLeft = 0;
+        let scoreRight = 0;
+
+        const ball_radius = Number(window.prompt("Introduce el radio de la bola"));
+        ball.style.width = 2 * ball_radius + "px";
+        ball.style.height = 2 * ball_radius + "px";
+        ball.style.borderRadius = ball_radius + "px";
+
+        let velocity_x = 15;
+        let velocity_y = -15;
+
+        document.onkeydown = function(e){
+            move_paddle(e);
+            move_paddle2(e);
+        };
+
+        let ball_movement = setInterval(move_ball, 40);
+
+        function move_ball(){
+            // Rebote arriba/abajo
+            if(ball.offsetTop <= 0 || ball.offsetTop >= window.innerHeight - 2*ball_radius){
+                velocity_y = -velocity_y;
+            }
+
+            // Rebote paddle izquierdo
+            if(ball.offsetLeft <= paddle.offsetLeft + paddle.offsetWidth &&
+               ball.offsetTop + ball_radius >= paddle.offsetTop &&
+               ball.offsetTop <= paddle.offsetTop + paddle.offsetHeight){
+                velocity_x = -velocity_x;
+                scoreLeft++; // Aumenta puntuación jugador izquierdo
+                scoreLeftDiv.textContent = scoreLeft;
+            }
+
+            // Rebote paddle derecho
+            if(ball.offsetLeft + 2*ball_radius >= paddle2.offsetLeft &&
+               ball.offsetTop + ball_radius >= paddle2.offsetTop &&
+               ball.offsetTop <= paddle2.offsetTop + paddle2.offsetHeight){
+                velocity_x = -velocity_x;
+                scoreRight++; // Aumenta puntuación jugador derecho
+                scoreRightDiv.textContent = scoreRight;
+            }
+
+            // Pérdida izquierda
+            if(ball.offsetLeft <= 0){
+                clearInterval(ball_movement);
+                alert("¡Gana jugador derecho!");
+            }
+
+            // Pérdida derecha
+            if(ball.offsetLeft + 2*ball_radius >= window.innerWidth){
+                clearInterval(ball_movement);
+                alert("¡Gana jugador izquierdo!");
+            }
+
+            ball.style.top = (ball.offsetTop + velocity_y) + "px";
+            ball.style.left = (ball.offsetLeft + velocity_x) + "px";
+        }
+
+        function move_paddle(e){
+            if(e.key === "ArrowUp" && paddle.offsetTop > 0){
+                paddle.style.top = (paddle.offsetTop - 10) + "px";
+            } else if(e.key === "ArrowDown" && paddle.offsetTop + paddle.offsetHeight < window.innerHeight){
+                paddle.style.top = (paddle.offsetTop + 10) + "px";
+            }
+        }
+
+        function move_paddle2(e){
+            if(e.key === "w" && paddle2.offsetTop > 0){
+                paddle2.style.top = (paddle2.offsetTop - 10) + "px";
+            } else if(e.key === "s" && paddle2.offsetTop + paddle2.offsetHeight < window.innerHeight){
+                paddle2.style.top = (paddle2.offsetTop + 10) + "px";
+            }
+        }
+    </script>
+</body>
+</html>
