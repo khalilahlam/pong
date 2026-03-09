@@ -1,144 +1,259 @@
 <html>
-<head>
-    <style>
-        body {
-            overflow: hidden;
-            margin: 0;
-            background-color: black;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+	<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
-        #paddle, #paddle2 {
-            width: 40px;
-            height: 150px;
-            position: absolute;
-            top: calc(50% - 75px);
-            background-color: #ffefef;
-        }
+		<style>
+			body {
+				overflow:hidden;
+				background-color: black;
+			}
+			
+			#paddle {
+				width: 40px;
+				height: 150px;
+				position: absolute;
+				top: calc(50% - 75px);
+				left: 50px;
+				background-color: #eb01eb;
+			}
 
-        #paddle {
-            left: 50px;
-        }
+			#paddle2 {
+				width: 40px;
+				height: 150px;
+				position: absolute;
+				top: calc(50% - 75px);
+				right: 50px;
+				background-color: #f700ff;
+			}
 
-        #paddle2 {
-            right: 50px;
-        }
+			#ball {
 
-        #ball {
-            position: absolute;
-            top: calc(50%);
-            left: calc(50%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background-color: #AA0000;
-        }
+				position: absolute;
+				top: calc(50%);
+				left: calc(50%);
+				background-color: #ffee02;
 
-        #scoreLeft, #scoreRight {
-            position: fixed;
-            top: 20px;
-            font-size: 32px;
-            font-weight: bold;
-        }
+				
+			}
+			#salir {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1000; /* que esté encima del juego */
+	 background-color: #f700ff;
+    color: yellow;
+    border-radius: 10px;
+    border: 2px solid yellow;
+}
 
-        #scoreLeft {
-            left: 50px;
-        }
+#salir:hover {
+    background-color: yellow;
+    color: #f700ff;
+    transition: 0.3s;
+}
+button {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-family: 'Press Start 2P', monospace;
+    cursor: pointer;
+    background-color: #f700ff;
+    color: yellow;
+    border-radius: 10px;
+    border: 2px solid yellow;
+  }
 
-        #scoreRight {
-            right: 50px;
-        }
-    </style>
-</head>
-<body>
-    <div id="paddle"></div>
-    <div id="ball"></div>
-    <div id="paddle2"></div>
+  #toggleMusic {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    margin: 0; 
+    z-index: 1000;
+}
 
-    <div id="scoreLeft">0</div>
-    <div id="scoreRight">0</div>
+ 
 
-    <script>
-        const paddle = document.getElementById("paddle");
-        const paddle2 = document.getElementById("paddle2");
-        const ball = document.getElementById("ball");
-        const scoreLeftDiv = document.getElementById("scoreLeft");
-        const scoreRightDiv = document.getElementById("scoreRight");
 
-        let scoreLeft = 0;
-        let scoreRight = 0;
 
-        const ball_radius = Number(window.prompt("Introduce el radio de la bola"));
-        ball.style.width = 2 * ball_radius + "px";
-        ball.style.height = 2 * ball_radius + "px";
-        ball.style.borderRadius = ball_radius + "px";
+		</style>
+	</head>
+	<body>
+		<div id="nombres"></div>
+		
+		<button id="salir">Salir</button>
+		<div id="paddle"><!-- paddle --></div>
+		<div id="paddle2"><!-- paddle --></div>
 
-        let velocity_x = 15;
-        let velocity_y = -15;
+		<div id="ball"><!-- ball --></div>
+<audio id="musica" src="pong-pong-193380.mp3" loop></audio>
+<button id="toggleMusic">🔊 Música</button>
 
-        document.onkeydown = function(e){
-            move_paddle(e);
-            move_paddle2(e);
-        };
+	</body>	
+		<script>
+			 // Leer nombres de localStorage
+        const nombre1 = localStorage.getItem("jugador1") || "Jugador 1";
+        const nombre2 = localStorage.getItem("jugador2") || "Jugador 2";
 
-        let ball_movement = setInterval(move_ball, 40);
+     const nombres = document.getElementById("nombres");
+nombres.innerHTML = `${nombre1} vs ${nombre2}`;
+nombres.style.position = "fixed";      // fijo incluso al cambiar tamaño de ventana
+nombres.style.top = "20px";
+nombres.style.left = "50%";
+nombres.style.transform = "translateX(-50%)";
+nombres.style.textAlign = "center";
+nombres.style.color = "yellow";
+nombres.style.fontFamily = "'Press Start 2P', monospace";
+nombres.style.fontSize = "24px";
+nombres.style.textShadow = "2px 2px 4px #f700ff, 0 0 10px #f700ff";
 
-        function move_ball(){
-            // Rebote arriba/abajo
-            if(ball.offsetTop <= 0 || ball.offsetTop >= window.innerHeight - 2*ball_radius){
-                velocity_y = -velocity_y;
-            }
+			const paddle = document.getElementById("paddle");
+			const paddle2 = document.getElementById("paddle2");
+			const ball = document.getElementById("ball");
+			
 
-            // Rebote paddle izquierdo
-            if(ball.offsetLeft <= paddle.offsetLeft + paddle.offsetWidth &&
-               ball.offsetTop + ball_radius >= paddle.offsetTop &&
-               ball.offsetTop <= paddle.offsetTop + paddle.offsetHeight){
-                velocity_x = -velocity_x;
-                scoreLeft++; // Aumenta puntuación jugador izquierdo
-                scoreLeftDiv.textContent = scoreLeft;
-            }
+			const ball_radius = window.prompt("Introduce el radio de la bola");
+			ball.style.width = 2*ball_radius + "px";
+			ball.style.height = 2*ball_radius + "px";
+			ball.style.borderRadius = ball_radius + "px";
+			
+			var velocity_x = 15;
+			var velocity_y = -15;
 
-            // Rebote paddle derecho
-            if(ball.offsetLeft + 2*ball_radius >= paddle2.offsetLeft &&
-               ball.offsetTop + ball_radius >= paddle2.offsetTop &&
-               ball.offsetTop <= paddle2.offsetTop + paddle2.offsetHeight){
-                velocity_x = -velocity_x;
-                scoreRight++; // Aumenta puntuación jugador derecho
-                scoreRightDiv.textContent = scoreRight;
-            }
+			document.addEventListener("keydown", move_paddle);
+			
+			// Move ball
+			var ball_movement = setInterval(move_ball, 25);
 
-            // Pérdida izquierda
-            if(ball.offsetLeft <= 0){
-                clearInterval(ball_movement);
-                alert("¡Gana jugador derecho!");
-            }
+			function move_ball(){
 
-            // Pérdida derecha
-            if(ball.offsetLeft + 2*ball_radius >= window.innerWidth){
-                clearInterval(ball_movement);
-                alert("¡Gana jugador izquierdo!");
-            }
+				//Check Top
+				if (ball.offsetTop  <= 0) {
+					velocity_y = -velocity_y;
+				}
 
-            ball.style.top = (ball.offsetTop + velocity_y) + "px";
-            ball.style.left = (ball.offsetLeft + velocity_x) + "px";
-        }
 
-        function move_paddle(e){
-            if(e.key === "ArrowUp" && paddle.offsetTop > 0){
-                paddle.style.top = (paddle.offsetTop - 10) + "px";
-            } else if(e.key === "ArrowDown" && paddle.offsetTop + paddle.offsetHeight < window.innerHeight){
-                paddle.style.top = (paddle.offsetTop + 10) + "px";
-            }
-        }
+				//Check bottom
+				if (ball.offsetTop >= (window.innerHeight -2*ball_radius)) {
+					velocity_y = -velocity_y;
+				}
 
-        function move_paddle2(e){
-            if(e.key === "w" && paddle2.offsetTop > 0){
-                paddle2.style.top = (paddle2.offsetTop - 10) + "px";
-            } else if(e.key === "s" && paddle2.offsetTop + paddle2.offsetHeight < window.innerHeight){
-                paddle2.style.top = (paddle2.offsetTop + 10) + "px";
-            }
-        }
-    </script>
-</body>
+				if (ball.offsetLeft <= 90 && 
+					(ball.offsetTop >= (paddle.offsetTop-ball_radius))	&& 
+					(ball.offsetTop <= (paddle.offsetTop + 150 - ball_radius))){
+					velocity_x = -velocity_x;
+				}
+
+				//Check left
+				if (ball.offsetLeft <= 0) {
+				clearInterval(ball_movement);
+				alert(`${nombre2} gana!`);
+				location.reload();
+			}
+
+								// Colisión con paddle 2
+				if (
+					ball.offsetLeft + 2 * ball_radius >= paddle2.offsetLeft &&
+					ball.offsetTop >= (paddle2.offsetTop - ball_radius) &&
+					ball.offsetTop <= (paddle2.offsetTop + paddle2.offsetHeight - ball_radius)
+				) {
+					velocity_x = -velocity_x;
+				}
+
+			if (ball.offsetLeft + 2*ball_radius >= window.innerWidth) {
+    clearInterval(ball_movement);
+    alert(`${nombre1} gana!`);
+    location.reload();
+}
+
+
+			
+
+				
+				ball.style.top = (ball.offsetTop + velocity_y) +"px";
+				ball.style.left = (ball.offsetLeft + velocity_x) +"px";
+			
+			}
+
+			function move_paddle(pkey){
+
+				if (pkey.which == 87){
+					paddle.style.top = (paddle.offsetTop - 10) +"px";
+				} else if (pkey.which == 83){
+					paddle.style.top = (paddle.offsetTop + 10) +"px";
+				}
+
+						
+					if (pkey.key === "ArrowUp") {
+					paddle2.style.top = (paddle2.offsetTop - 10) + "px";
+				}
+
+				if (pkey.key === "ArrowDown") {
+					paddle2.style.top = (paddle2.offsetTop + 10) + "px";
+				}
+
+			
+
+				if (paddle.offsetTop < 0) {
+					paddle.style.top = "0px";
+				}
+				if (paddle.offsetTop > window.innerHeight - paddle.offsetHeight) {
+					paddle.style.top = (window.innerHeight - paddle.offsetHeight) + "px";
+				}
+				if (paddle2.offsetTop < 0) {
+					paddle2.style.top = "0px";
+				}
+				if (paddle2.offsetTop > window.innerHeight - paddle2.offsetHeight) {
+					paddle2.style.top = (window.innerHeight - paddle2.offsetHeight) + "px";
+				}
+			
+
+			}
+
+			
+			document.getElementById("salir").onclick = () => {
+    window.location.href = "salir.html";
+};
+const musica = document.getElementById("musica");
+const btn = document.getElementById("toggleMusic");
+
+// estado guardado
+let musicaActiva = localStorage.getItem("musica") !== "off";
+
+musica.volume = 0.3;
+
+if (musicaActiva) {
+    musica.play().catch(()=>{});
+    btn.textContent = "🔊 Música";
+} else {
+    btn.textContent = "🔇 Música";
+}
+
+// botón música
+btn.onclick = () => {
+    if (musica.paused) {
+        musica.play();
+        localStorage.setItem("musica", "on");
+        btn.textContent = "🔊 Música";
+    } else {
+        musica.pause();
+        localStorage.setItem("musica", "off");
+        btn.textContent = "🔇 Música";
+    }
+};
+
+// activar música en primer clic del usuario (requerido por navegador)
+document.addEventListener("click", () => {
+    if (localStorage.getItem("musica") !== "off") {
+        musica.play().catch(()=>{});
+    }
+}, { once: true });
+
+		</script>
 </html>
